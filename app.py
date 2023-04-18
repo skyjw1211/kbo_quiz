@@ -38,7 +38,7 @@ def compare_players(user_input, answer):
 def index():
 
 
-    return render_template('index.html', guess = False)
+    return render_template('index.html')
 
 # 사용자가 입력한 값을 받아서 선수와 비교하기
 @app.route('/guess', methods = ['POST'])
@@ -60,13 +60,13 @@ def guess():
 def answer():
     temp_answer = select_random_player().to_dict()
     answer = {}
-    answer['ID'] = str(temp_answer['ID'])
-    answer['이름'] = str(temp_answer['이름'])
-    answer['팀'] = str(temp_answer['팀'])
-    answer['번호'] = str(temp_answer['번호'])
-    answer['나이'] = str(temp_answer['나이'])
-    answer['포지션'] = str(temp_answer['포지션'])
-    answer['투타유형'] = str(temp_answer['투타유형'])
+    answer['id'] = str(temp_answer['ID'])
+    answer['name'] = str(temp_answer['이름'])
+    answer['team'] = str(temp_answer['팀'])
+    answer['number'] = str(temp_answer['번호'])
+    answer['age'] = str(temp_answer['나이'])
+    answer['position'] = str(temp_answer['포지션'])
+    answer['hand'] = str(temp_answer['투타유형'])
     print(answer)
     return answer
 

@@ -5,13 +5,23 @@
     <script src="https://code.jquery.com/jquery-latest.min.js"></script>
     <title>야구 선수 퀴즈</title>
     <style>
-
+    .welcome-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .correct {
+      background-color: lightgreen;
+    }
+    .incorrect {
+      background-color: #808080;
+    }
 
     .circle {
         margin: 0 auto;
         width: 100px;
         height: 100px;
-        background-color: #808080;
         border: 15px solid #ffffff;
         border-radius: 50%;
         display: flex;
@@ -77,39 +87,23 @@
     
 
 
-    <h1>야구 선수 퀴즈</h1>
-    <div class = 'input'>
-    <h2>선수 이름을 입력하세요:</h2>
-    <form>
-      <input type="text" id = "name">
-      <input type="submit" id = "submit-button" value="정답 제출"> 
-    </form>
-    <!-- form 제출 시 ajax -->
-    <h3>정답을 맞추기 위해선 선수 이름으로 유추하세요.</h3>
+    <h1 class = "welcome-header">야구 선수 퀴즈</h1>
+    <div class = 'input welcome-header'>
+    <h2 class = "welcome-header">선수 이름을 입력하세요:</h2>
     </div>
+    <div class = "mid_wrapper">
+    <input type="text" id = "name" size = "50">
+    <input type="button" id = "submit-button" value="정답 제출"> 
+    </div>
+    <div id="suggestion_box"></div>
+    
+    <!-- form 제출 시 ajax -->
+    <h3 class = "welcome-header">정답을 맞추기 위해선 선수 이름으로 유추하세요.</h3>
+    
 
-    <div class = 'output'>
-    <h3>선수의 팀, 번호, 나이, 포지션, 투타유형 5개를 보여드립니다.</h3>
-      <div class = "upper_wrapper">
-        <span>강백호</span>
-      </div>
-      <div class="mid_wrapper">
-        <div class="circle">
-          <span class="text-sm">KT</span>
-        </div>
-        <div class="circle">
-          <span class="text-sm">50</span>
-        </div>
-        <div class="circle">
-          <span class="text-sm">50</span>
-        </div>
-        <div class="circle">
-          <span class="text-sm">내야수</span>
-        </div>
-        <div class="circle">
-          <span class="text-sm">우투좌타</span>
-        </div>
-      </div>
+    <h3 class = "welcome-header">선수의 팀, 번호, 나이, 포지션, 투타유형 5개를 보여드립니다.</h3>
+
+    <div id = 'output'></div>
       
       <div class="under_wrapper">
         <div class="feature_wrapper">
@@ -122,7 +116,7 @@
           <span class="feature">AGE</span>
         </div>
         <div class="feature_wrapper">
-          <span class="feature">FEATURE</span>
+          <span class="feature">POSITION</span>
         </div>
         <div class="feature_wrapper">
           <span class="feature">HAND</span>
@@ -133,48 +127,129 @@
 
   <script>
     var answer_set = false; // false면 제출 시 정답도 가져옴. 가져온 후 true로, 다음 게임 시 다시 false로
-    var history = [];
-    const answer = [];
+    var answer;
+    var n_try = 0;
+    
+    function addFeatureElement(content, compared) {
+
+      const newFeatureDiv = document.createElement("div");
+      newFeatureDiv.className = "circle";
+      if (compared){
+        newFeatureDiv.className += " correct";
+      }else{
+        newFeatureDiv.className += " incorrect";
+      }
+      const newFeatureSpan = document.createElement("span");
+      newFeatureSpan.className = "text-sm"; 
+
+      const newContent = document.createTextNode(content);
+
+      newFeatureSpan.appendChild(newContent);
+      newFeatureDiv.appendChild(newFeatureSpan);
+
+      return newFeatureDiv
+    }
+
+    function addElement(player, compare) {
+      // create a new div element
+      const newNameDiv = document.createElement("div");
+      const newNameSpan = document.createElement("span");
+      newNameDiv.className = "upper_wrapper";
+
+      const newMidDiv = document.createElement("div");
+      newMidDiv.className = "mid_wrapper";
+
+      // and give it some content
+      const newName = document.createTextNode(player.name);
+
+      // add the text node to the newly created div
+      newNameSpan.appendChild(newName);
+      newNameDiv.appendChild(newNameSpan);
+
+      newTeamDiv = addFeatureElement(player.team, compare.team)
+      newNumberDiv = addFeatureElement(player.number, compare.number)
+      newAgeDiv = addFeatureElement(player.age, compare.age)
+      newPositionDiv = addFeatureElement(player.position, compare.position)
+      newHandDiv = addFeatureElement(player.hand, compare.hand)
+
+      // add the newly created element and its content into the DOM
+      const currentDiv = document.getElementById("output");
+      
+      newMidDiv.appendChild(newTeamDiv)
+      newMidDiv.appendChild(newNumberDiv)
+      newMidDiv.appendChild(newAgeDiv)
+      newMidDiv.appendChild(newPositionDiv)
+      newMidDiv.appendChild(newHandDiv)
+
+      currentDiv.appendChild(newNameDiv);
+      currentDiv.appendChild(newMidDiv);
+      
+    }
+
     $('#submit-button').click(function(){
+          var player;
           var player_name = $('#name').val();
           var post_data = {
             'player_name' : player_name
           }
-          if (answer_set == false) {
+          if (answer_set === false) {
             $.ajax({
               type: 'POST',
               url: '{{url_for("answer")}}',
+              async:false,
               data: JSON.stringify(post_data),
               dataType : 'JSON',
               contentType: "application/json",
               success: function(data){
-                  alert('성공! 데이터 값:' + data.id)
+                  alert('성공! 정답 데이터 값:' + data.name)
                   answer = data;
+                  
+                  //answer값 저장
               },
               error: function(request, status, error){
                   alert('ajax 통신 실패')
                   alert(error);
               }  
             })
-          answer_set = true;
           }
+          answer_set = true;
 
           $.ajax({
               type: 'POST',
               url: '{{url_for("guess")}}',
+              async:false,
               data: JSON.stringify(post_data),
               dataType : 'JSON',
               contentType: "application/json",
               success: function(data){
-                  alert('성공! 데이터 값:' + data.id)
+                  alert('성공! 데이터 값:' + data.name)
+                  // div 추가. answer와 비교
+                  compare = {
+                              'team' : answer.team == data.team, 
+                              'number' : answer.number == data.number,
+                              'age' : answer.age == data.age,
+                              'position' : answer.position == data.position,
+                              'hand' : answer.hand == data.hand,
+                            }
+                  alert(answer.name);
+                  alert(answer_set);
+                  n_try += 1;
+                  if (answer.id == data.id){
+                    alert(n_try + "번 만에 맞추었습니다!")
+                  }
+                  addElement(data, compare);
+                  
+                  
               },
               error: function(request, status, error){
                   alert('ajax 통신 실패')
                   alert(error);
               }
-          })
-        
+          })      
+          
+
       })
+      
   </script>
 
   </body>
