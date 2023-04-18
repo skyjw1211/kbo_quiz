@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <title>야구 선수 퀴즈</title>
+    <style>
+
+
+    .circle {
+        margin: 0 auto;
+        width: 100px;
+        height: 100px;
+        background-color: #808080;
+        border: 15px solid #ffffff;
+        border-radius: 50%;
+        display: flex;
+        float: left;
+        align-items: center;
+        justify-content: center;
+        vertical-align: middle;
+    }
+    .feature_wrapper {
+      margin: 0 auto;
+      width: 100px;
+      height: 10px;
+      border: 10px solid #ffffff;
+      display: flex;
+      float: left;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+
+    }
+    .under_wrapper {
+        margin: 0 auto;
+        padding-left: 15px;
+        padding-right: 15px;
+        max-width: 1000px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .upper_wrapper {
+        margin: 0 auto;
+        padding-left: 15px;
+        padding-right: 15px;
+        max-width: 1000px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mid_wrapper {
+        margin: 0 auto;
+        padding-left: 15px;
+        padding-right: 15px;
+        max-width: 1000px;
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .text-sm {
+      color: white;
+    }
+    .feature {
+      color: black;
+    }
+
+    </style>
+
+  </head>
+  <body>
+    
+
+
+    <h1>야구 선수 퀴즈</h1>
+    <div class = 'input'>
+    <h2>선수 이름을 입력하세요:</h2>
+    <form>
+      <input type="text" id = "name">
+      <input type="submit" id = "submit-button" value="정답 제출"> 
+    </form>
+    <!-- form 제출 시 ajax -->
+    <h3>정답을 맞추기 위해선 선수 이름으로 유추하세요.</h3>
+    </div>
+
+    <div class = 'output'>
+    <h3>선수의 팀, 번호, 나이, 포지션, 투타유형 5개를 보여드립니다.</h3>
+      <div class = "upper_wrapper">
+        <span>강백호</span>
+      </div>
+      <div class="mid_wrapper">
+        <div class="circle">
+          <span class="text-sm">KT</span>
+        </div>
+        <div class="circle">
+          <span class="text-sm">50</span>
+        </div>
+        <div class="circle">
+          <span class="text-sm">50</span>
+        </div>
+        <div class="circle">
+          <span class="text-sm">내야수</span>
+        </div>
+        <div class="circle">
+          <span class="text-sm">우투좌타</span>
+        </div>
+      </div>
+      
+      <div class="under_wrapper">
+        <div class="feature_wrapper">
+          <span class="feature">TEAM</span>
+        </div>
+        <div class="feature_wrapper">
+          <span class="feature">NUMBER</span>
+        </div>
+        <div class="feature_wrapper">
+          <span class="feature">AGE</span>
+        </div>
+        <div class="feature_wrapper">
+          <span class="feature">FEATURE</span>
+        </div>
+        <div class="feature_wrapper">
+          <span class="feature">HAND</span>
+        </div>
+      </div>
+
+  </div>
+
+  <script>
+    var answer_set = false; // false면 제출 시 정답도 가져옴. 가져온 후 true로, 다음 게임 시 다시 false로
+    var history = [];
+    const answer = [];
+    $('#submit-button').click(function(){
+          var player_name = $('#name').val();
+          var post_data = {
+            'player_name' : player_name
+          }
+          if (answer_set == false) {
+            $.ajax({
+              type: 'POST',
+              url: '{{url_for("answer")}}',
+              data: JSON.stringify(post_data),
+              dataType : 'JSON',
+              contentType: "application/json",
+              success: function(data){
+                  alert('성공! 데이터 값:' + data.id)
+                  answer = data;
+              },
+              error: function(request, status, error){
+                  alert('ajax 통신 실패')
+                  alert(error);
+              }  
+            })
+          answer_set = true;
+          }
+
+          $.ajax({
+              type: 'POST',
+              url: '{{url_for("guess")}}',
+              data: JSON.stringify(post_data),
+              dataType : 'JSON',
+              contentType: "application/json",
+              success: function(data){
+                  alert('성공! 데이터 값:' + data.id)
+              },
+              error: function(request, status, error){
+                  alert('ajax 통신 실패')
+                  alert(error);
+              }
+          })
+        
+      })
+  </script>
+
+  </body>
+
+</html>

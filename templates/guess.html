@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>야구 선수 맞추기</title>
+    <style>
+        .correct { color: green; }
+        .incorrect { color: grey; }
+    </style>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <h1>야구 선수 맞추기</h1>
+    <h2>선수의 이름을 입력하세요:</h2>
+    <form method="POST">
+      <input type="text" name="player_name" placeholder="이름을 입력하세요">
+      <button type="submit">제출</button>
+    </form>
+    {% if show_results %}
+      {% if correct %}
+        <p class="correct">정답입니다! 축하합니다!</p>
+      {% else %}
+        <p class="incorrect">오답입니다. 다시 시도해보세요.</p>
+        <p>정답은 {{answer[0]}} 선수입니다.</p>
+        <p>팀: {{answer[1]}} / 번호: {{answer[2]}} / 나이: {{answer[3]}} / 포지션: {{answer[4]}} / 투타유형: {{answer[5]}}</p>
+        {% for i in range(1,6) %}
+          {% if correct_list[i-1] %}
+            <p class="correct">{{i}}번: {{user_answer[i-1]}}</p>
+          {% else %}
+            <p class="incorrect">{{i}}번: {{user_answer[i-1]}} / 정답: {{answer[i+1]}}</p>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endif %}
+  </body>
+</html>
