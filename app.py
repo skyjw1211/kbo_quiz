@@ -1,6 +1,15 @@
 from flask import Flask, render_template, jsonify, request
 import pandas as pd
 import random
+import sqlite3
+from hangeul_jamo_splitter import *
+
+def name_split(name):
+    res = []
+    for syl in list(name):
+        res += split_syllable(syl)
+    return ''.join(res)
+
 
 app = Flask(__name__)
 
@@ -11,6 +20,15 @@ age_ls = list(map(lambda x: str(2023 - int(x.split('년')[0])), df['생일'].to_
 df['나이'] = age_ls
 df['ID'] = df['ID'].astype('str')
 df['번호'] = df['번호'].astype('str')
+name_split_ls = []
+name_ls = df['이름'].to_list()
+
+for name in name_ls:
+    name_split_ls.append(name_split(name))
+
+df['이름분할'] = name_split_ls
+
+
 
 
 # 랜덤한 ID 하나 선택하기
@@ -36,6 +54,13 @@ def compare_players(user_input, answer):
 # 첫 화면
 @app.route('/')
 def index():
+
+
+    return render_template('index.html')
+
+# 재시작
+@app.route('/restart', methods = ['GET'])
+def restart():
 
 
     return render_template('index.html')
@@ -69,6 +94,29 @@ def answer():
     answer['hand'] = str(temp_answer['투타유형'])
     print(answer)
     return answer
+
+# 정답 얻기
+@app.route('/search', methods = ['GET'])
+def search():
+    word = request.args.get('keyword')
+    split_word = name_split(word)
+    if word != '':
+        conn = sqlite3.connect('test_db.sqlite')
+        df.to_sql('players', conn, if_exists='replace', index=False)
+
+        SQL = rf"""
+        SELECT ID, 이름, 팀, 포지션 FROM players
+        WHERE 이름분할 LIKE '{split_word}%'
+        """
+        df_temp = pd.read_sql(SQL,conn)
+        # name_search_list = df_temp['이름'].to_list()
+        temp_ls = list(zip(df_temp['이름'].to_list(), df_temp['팀'].to_list(), df_temp['포지션'].to_list()))
+        temp_ls = list(map(lambda x: x[0] +' '+ x[1] +' '+ x[2], temp_ls))
+        
+    else:
+        temp_ls = ['']
+        
+    return '\n'.join(temp_ls)
 
 
 if __name__ == '__main__':

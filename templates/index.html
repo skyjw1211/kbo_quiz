@@ -68,16 +68,49 @@
         padding-left: 15px;
         padding-right: 15px;
         max-width: 1000px;
-        height: 150px;
+        /* height: 150px; */
         display: flex;
         align-items: center;
         justify-content: center;
     }
+    
+    .search_wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+    }
+
     .text-sm {
       color: white;
     }
     .feature {
       color: black;
+    }
+
+    .invisible{
+      display: none;
+    }
+    #suggestion_box {
+      margin-top: 1px;
+      background: white;
+      padding: 0 10px;
+      border: 1px solid black;
+    }
+    #suggested-items{
+      height:100px;
+      width: 250px;
+      overflow: auto;
+    }
+    #name {
+      width: 200px;
+      height: 20px;
+    }  
+
+    .item:hover{
+      color: #fff;
+      background-color: lightgreen;
     }
 
     </style>
@@ -87,15 +120,21 @@
     
 
 
-    <h1 class = "welcome-header">야구 선수 퀴즈</h1>
+    <h1 class = "welcome-header">KBO 야구 선수 퀴즈</h1>
     <div class = 'input welcome-header'>
     <h2 class = "welcome-header">선수 이름을 입력하세요:</h2>
     </div>
-    <div class = "mid_wrapper">
-    <input type="text" id = "name" size = "50">
-    <input type="button" id = "submit-button" value="정답 제출"> 
+    <div class = "search_wrapper">
+      <div class = "mid_wrapper">
+        <input type="text" id = "name" autocomplete="off">
+        <input type="button" id = "submit-button" value="정답 제출"> 
+        <input type="button" id = "restart-button" value="재시작"> 
+      </div>
+      <div id="suggestion_box" class = "invisible">
+        <div id = suggested-items></div>
+      </div>
     </div>
-    <div id="suggestion_box"></div>
+    
     
     <!-- form 제출 시 ajax -->
     <h3 class = "welcome-header">정답을 맞추기 위해선 선수 이름으로 유추하세요.</h3>
@@ -185,6 +224,63 @@
       currentDiv.appendChild(newMidDiv);
       
     }
+    $(function() {   // <input>요소에 문자가 입력될 때마다 호출됨.
+
+      $("#name").keyup(function() {
+
+          $.ajax({ // Ajax 요청을 작성하고 GET 방식으로 전송함.
+
+            url: '{{url_for("search")}}',
+            type: "GET",
+            data: { keyword : $(this).val() }
+
+              
+
+          })       // Ajax 응답을 정상적으로 받으면 실행됨.
+
+          .done(function(result) {
+              const recommendBox = document.querySelector("#suggestion_box");
+              recommendBox.classList.remove('invisible');
+              const input_name = document.getElementById("#name");
+
+              recommendBox.innerHTML = "";
+
+              const suggestedItems = document.createElement('div')
+              suggestedItems.id = "suggested-items"
+              
+              recommendBox.appendChild(suggestedItems);
+
+              // item별로 split하기
+              var items = result.split('\n');
+              // for문 돌면서 item 추가
+              for (var i in items) {
+                
+                var player_content = document.createTextNode(items[i]);
+                var suggestedItem = document.createElement('div')
+                suggestedItem.className = "item"
+
+                suggestedItem.addEventListener('click', function(e){
+                  document.getElementById("name").value = this.textContent.split(' ')[0];
+                });
+
+                suggestedItem.appendChild(player_content);
+                suggestedItems.appendChild(suggestedItem);
+              }
+          })
+      })
+      });
+
+    $('#restart-button').click(function(){
+        // 정답 데이터 다시 가져오기 - answer_set = false
+        answer_set = false;
+        // n_try reset
+        n_try = false;
+        // div 생성됐던거 지우기
+        const div_output = document.getElementById('output');
+        div_output.innerHTML = "";
+        alert("퀴즈를 재시작합니다!");
+        }) 
+
 
     $('#submit-button').click(function(){
           var player;
@@ -201,7 +297,7 @@
               dataType : 'JSON',
               contentType: "application/json",
               success: function(data){
-                  alert('성공! 정답 데이터 값:' + data.name)
+                  // alert('성공! 정답 데이터 값:' + data.name)
                   answer = data;
                   
                   //answer값 저장
@@ -222,7 +318,7 @@
               dataType : 'JSON',
               contentType: "application/json",
               success: function(data){
-                  alert('성공! 데이터 값:' + data.name)
+                  // alert('성공! 데이터 값:' + data.name)
                   // div 추가. answer와 비교
                   compare = {
                               'team' : answer.team == data.team, 
@@ -231,8 +327,8 @@
                               'position' : answer.position == data.position,
                               'hand' : answer.hand == data.hand,
                             }
-                  alert(answer.name);
-                  alert(answer_set);
+                  // alert(answer.name);
+                  // alert(answer_set);
                   n_try += 1;
                   if (answer.id == data.id){
                     alert(n_try + "번 만에 맞추었습니다!")
